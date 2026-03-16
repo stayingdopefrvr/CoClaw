@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CoClaw — AI Automation for Local Business</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f4f0;
+    --orange: #ff4d00;
+    --orange-dim: #ff4d0022;
+    --gray: #1a1a1a;
+    --gray-mid: #2a2a2a;
+    --gray-text: #888;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--sans);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1.25rem 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #ffffff0f;
+    background: #0a0a0add;
+    backdrop-filter: blur(12px);
+  }
+
+  .logo {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--orange); }
+
+  nav a {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--gray-text);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--orange); }
+
+  nav .nav-links { display: flex; gap: 2rem; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8rem 2.5rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    right: -10%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--orange) 0%, transparent 65%);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .hero-tag::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--orange);
+  }
+
+  h1 {
+    font-size: clamp(3rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    max-width: 900px;
+    margin-bottom: 2rem;
+  }
+
+  h1 .accent { color: var(--orange); }
+
+  .hero-sub {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--gray-text);
+    max-width: 480px;
+    line-height: 1.8;
+    margin-bottom: 3rem;
+  }
+
+  .cta-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: var(--orange);
+    color: var(--black);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 0.875rem 2rem;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.2s;
+    display: inline-block;
+  }
+
+  .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--gray-text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    padding: 0.875rem 2rem;
+    border: 1px solid #ffffff18;
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+    display: inline-block;
+  }
+
+  .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+
+  /* TICKER */
+  .ticker {
+    border-top: 1px solid #ffffff0f;
+    border-bottom: 1px solid #ffffff0f;
+    padding: 1rem 0;
+    overflow: hidden;
+    white-space: nowrap;
+    background: var(--gray);
+  }
+
+  .ticker-inner {
+    display: inline-flex;
+    gap: 4rem;
+    animation: ticker 18s linear infinite;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--gray-text);
+    text-transform: uppercase;
+  }
+
+  .ticker-inner span { color: var(--orange); }
+
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* SERVICES */
+  .section {
+    padding: 6rem 2.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--orange);
+    text-transform: uppercase;
+    margin-bottom: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .section-label::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 1px;
+    background: var(--orange);
+  }
+
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: #ffffff0f;
+    border: 1px solid #ffffff0f;
+  }
+
+  .service-card {
+    background: var(--black);
+    padding: 2.5rem;
+    transition: background 0.3s;
+  }
+
+  .service-card:hover { background: var(--gray); }
+
+  .service-num {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--orange);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+  }
+
+  .service-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+  }
+
+  .service-card p {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--gray-text);
+    line-height: 1.7;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: #ffffff0f;
+    margin: 0 2.5rem;
+  }
+
+  /* LEGAL */
+  .legal-section {
+    padding: 6rem 2.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .legal-section h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  .legal-date {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    letter-spacing: 0.05em;
+    margin-bottom: 3rem;
+  }
+
+  .legal-block {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid #ffffff0f;
+  }
+
+  .legal-block:last-child { border-bottom: none; }
+
+  .legal-block h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 1rem;
+    font-family: var(--mono);
+  }
+
+  .legal-block p {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: #aaa;
+    line-height: 1.9;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid #ffffff0f;
+    padding: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: gap;
+    gap: 1rem;
+  }
+
+  footer .logo { font-size: 1rem; }
+
+  footer p {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    letter-spacing: 0.05em;
+  }
+
+  footer a {
+    color: var(--gray-text);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    transition: color 0.2s;
+  }
+
+  footer a:hover { color: var(--orange); }
+
+  .footer-links { display: flex; gap: 2rem; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-tag { animation: fadeUp 0.6s ease both; }
+  h1 { animation: fadeUp 0.6s 0.1s ease both; }
+  .hero-sub { animation: fadeUp 0.6s 0.2s ease both; }
+  .cta-row { animation: fadeUp 0.6s 0.3s ease both; }
+
+  @media (max-width: 640px) {
+    nav { padding: 1rem 1.25rem; }
+    .nav-links { display: none; }
+    .hero { padding: 7rem 1.25rem 3rem; }
+    .section { padding: 4rem 1.25rem; }
+    .legal-section { padding: 4rem 1.25rem; }
+    footer { padding: 2rem 1.25rem; flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="logo">Co<span>Claw</span></a>
+  <div class="nav-links">
+    <a href="#services">Services</a>
+    <a href="#privacy">Privacy</a>
+    <a href="#terms">Terms</a>
+    <a href="mailto:osullivan.kevin4@gmail.com">Contact</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">AI Automation — New York City</div>
+  <h1>Your business.<br>On <span class="accent">autopilot.</span></h1>
+  <p class="hero-sub">CoClaw installs AI employees for local businesses — handling lead follow-up, appointment booking, and review requests around the clock.</p>
+  <div class="cta-row">
+    <a href="mailto:osullivan.kevin4@gmail.com" class="btn-primary">Get a demo</a>
+    <a href="#services" class="btn-ghost">See how it works</a>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-inner">
+    <span>✦</span> Lead Follow-Up &nbsp;
+    <span>✦</span> Appointment Booking &nbsp;
+    <span>✦</span> Review Requests &nbsp;
+    <span>✦</span> 24/7 AI Agent &nbsp;
+    <span>✦</span> NYC Local Business &nbsp;
+    <span>✦</span> Powered by Claude &nbsp;
+    <span>✦</span> Lead Follow-Up &nbsp;
+    <span>✦</span> Appointment Booking &nbsp;
+    <span>✦</span> Review Requests &nbsp;
+    <span>✦</span> 24/7 AI Agent &nbsp;
+    <span>✦</span> NYC Local Business &nbsp;
+    <span>✦</span> Powered by Claude &nbsp;
+  </div>
+</div>
+
+<!-- SERVICES -->
+<section class="section" id="services">
+  <div class="section-label">What we do</div>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-num">01</div>
+      <h3>Lead Follow-Up</h3>
+      <p>Every new lead gets a personalized text within 60 seconds — even at 2am. No more missed opportunities.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-num">02</div>
+      <h3>Appointment Booking</h3>
+      <p>The AI handles the full conversation and drives every lead toward a booked appointment via Calendly.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-num">03</div>
+      <h3>Review Requests</h3>
+      <p>After every completed job, the AI sends a personalized review request — automatically, at the right time.</p>
+    </div>
+    <div class="service-card">
+      <div class="service-num">04</div>
+      <h3>Owner Briefings</h3>
+      <p>Every morning, the owner gets a summary of what their AI employee handled overnight. Zero effort required.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PRIVACY POLICY -->
+<section class="legal-section" id="privacy">
+  <div class="section-label">Legal</div>
+  <h2>Privacy Policy</h2>
+  <p class="legal-date">Last updated: March 15, 2026</p>
+
+  <div class="legal-block">
+    <h3>Who We Are</h3>
+    <p>CoClaw ("we," "us," or "our") provides AI-powered automation services for local businesses, including automated lead follow-up, appointment booking, and review request messaging. We are based in New York City.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Information We Collect</h3>
+    <p>We collect business contact information provided by clients and their customers through lead capture forms, including names, phone numbers, email addresses, and service inquiry details. This information is provided voluntarily by users when submitting a contact or quote request form.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>How We Use Information</h3>
+    <p>Information is used solely to provide automated follow-up and appointment booking services on behalf of our clients. We do not sell, rent, or share personal information with third parties for marketing purposes. Data is used only to facilitate the specific service inquiry for which it was submitted.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>SMS Messaging</h3>
+    <p>By submitting a contact or quote request form on a CoClaw client's website, you consent to receive SMS text messages related to your service inquiry. Message and data rates may apply. Message frequency varies based on your inquiry. Reply STOP at any time to opt out of future messages. Reply HELP for assistance. You will receive one confirmation message upon opting out and no further messages will be sent.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Data Security</h3>
+    <p>We take reasonable technical and organizational measures to protect personal information from unauthorized access, disclosure, alteration, or destruction. Data is stored securely and access is limited to authorized personnel only.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Data Retention</h3>
+    <p>We retain personal information only as long as necessary to provide the requested services. Clients may request deletion of their data at any time by contacting us.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Contact</h3>
+    <p>For questions, concerns, or data deletion requests regarding this Privacy Policy, contact us at: osullivan.kevin4@gmail.com or (207) 420-0354.</p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TERMS -->
+<section class="legal-section" id="terms">
+  <h2>Terms & Conditions</h2>
+  <p class="legal-date">Last updated: March 15, 2026</p>
+
+  <div class="legal-block">
+    <h3>Agreement</h3>
+    <p>By using CoClaw's services or interacting with our automated messaging system on behalf of any CoClaw client, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use our services.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Services Provided</h3>
+    <p>CoClaw provides AI-powered lead follow-up, appointment booking, and review request automation for local businesses. Services are delivered via SMS text message and other communication channels on behalf of our business clients.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>SMS Communications</h3>
+    <p>Message frequency varies based on your inquiry and ongoing business interactions. Message and data rates may apply depending on your mobile carrier and plan. CoClaw is not responsible for any charges incurred from your mobile carrier related to receiving SMS messages.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Opt-Out</h3>
+    <p>You may opt out of SMS messages at any time by replying STOP to any message. Upon receipt of your STOP message, we will send one final confirmation message confirming your opt-out. No further messages will be sent to your number. To re-subscribe, text START to the same number.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Support</h3>
+    <p>For help or support, reply HELP to any message you receive. You may also contact us directly at osullivan.kevin4@gmail.com or (207) 420-0354. We aim to respond to all support requests within one business day.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Limitation of Liability</h3>
+    <p>CoClaw is not liable for any indirect, incidental, special, or consequential damages arising from the use of or inability to use our services. Our total liability for any claim arising from our services shall not exceed the amount paid by the client for services in the preceding month.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Changes to Terms</h3>
+    <p>We reserve the right to update these Terms and Conditions at any time. Changes will be posted on this page with an updated date. Continued use of our services after changes constitutes acceptance of the updated terms.</p>
+  </div>
+
+  <div class="legal-block">
+    <h3>Governing Law</h3>
+    <p>These Terms are governed by the laws of the State of New York. Any disputes arising from these Terms shall be resolved in the courts of New York County, New York.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <a href="#" class="logo">Co<span>Claw</span></a>
+  <p>© 2026 CoClaw. New York City.</p>
+  <div class="footer-links">
+    <a href="#privacy">Privacy</a>
+    <a href="#terms">Terms</a>
+    <a href="mailto:osullivan.kevin4@gmail.com">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>
